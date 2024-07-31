@@ -26,13 +26,14 @@ export const NftUploader = () => {
   const { disconnect } = useDisconnect();
   const { data: ensName } = useEnsName({ address });
   const [isClient, setIsClient] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
+  const [isMetadataUploading, setIsMetadataUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const [nftName, setNftName] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [ipfsCid, setIpfsCid] = useState<string | null>(null);
-  const [metadataCid, setMetadataCid] = useState<string | null>(null);
   const [metadataURI, setMetadataURI] = useState<string | null>(null);
 
   console.log('Current chain:', chain); // デバッグ用
@@ -158,14 +159,14 @@ export const NftUploader = () => {
       alert('ファイルを選択してください。');
       return;
     }
-    setIsLoading(true);
+    setIsImageUploading(true);
     try {
       await uploadToPinata();
     } catch (error) {
       console.error('画像アップロードエラー:', error);
       alert('画像のアップロードに失敗しました。');
     } finally {
-      setIsLoading(false);
+      setIsImageUploading(false);
     }
   };
 
@@ -176,7 +177,7 @@ export const NftUploader = () => {
       alert('まず画像をアップロードしてください。');
       return;
     }
-    setIsLoading(true);
+    setIsMetadataUploading(true);
     try {
       const uri = await uploadMetadataToPinata(ipfsCid);
       if (uri) {
@@ -189,7 +190,7 @@ export const NftUploader = () => {
       console.error('メタデータアップロードエラー:', error);
       alert('メタデータのアップロードに失敗しました。');
     } finally {
-      setIsLoading(false);
+      setIsMetadataUploading(false);
     }
   };
 
@@ -323,17 +324,17 @@ export const NftUploader = () => {
         <Button 
           variant="contained" 
           onClick={handleImageUpload} 
-          disabled={!selectedFile || isLoading}
+          disabled={!selectedFile || isImageUploading}
         >
-          {isLoading ? 'アップロード中...' : '画像をアップロード'}
+          {isImageUploading ? 'アップロード中...' : '画像をアップロード'}
         </Button>
 
         <Button 
           variant="contained" 
           onClick={handleMetadataUpload} 
-          disabled={!ipfsCid || isLoading}
+          disabled={!ipfsCid || isMetadataUploading}
         >
-          {isLoading ? 'メタデータアップロード中...' : 'メタデータをアップロード'}
+          {isMetadataUploading ? 'メタデータアップロード中...' : 'メタデータをアップロード'}
         </Button>
       </Stack>
       {selectedFile && (
@@ -345,7 +346,10 @@ export const NftUploader = () => {
             画像IPFS CID: {ipfsCid || 'まだアップロードされていません'}
           </Typography>
           <Typography variant="body2">
-            メタデータIPFS CID: {metadataCid || 'まだアップロードされていません'}
+            メタデータIPFS CID: {metadataURI ? metadataURI.replace('ipfs://', '') : 'まだアップロードされていません'}
+          </Typography>
+          <Typography variant="body2">
+            NFT名: {nftName || 'まだ設定されていません'}
           </Typography>
         </Stack>
       </Stack>
